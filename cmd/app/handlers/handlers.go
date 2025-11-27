@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"educabot.com/bookshop/internal/books/services"
@@ -29,6 +30,11 @@ func (h *MetricsHandler) GetMetrics() gin.HandlerFunc {
 		defer cancel()
 
 		author, _ := url.QueryUnescape(c.Query("author"))
+
+		if strings.TrimSpace(author) == "" {
+			writeJSON(c.Writer, http.StatusBadRequest, "missing required query parameter: author")
+			return
+		}
 
 		result, err := h.service.GetMetrics(ctx, author)
 		if err != nil {

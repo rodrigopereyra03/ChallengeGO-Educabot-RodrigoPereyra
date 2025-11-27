@@ -70,3 +70,25 @@ func TestGetMetrics_ErrorExternalService(t *testing.T) {
 	assert.Equal(t, http.StatusBadGateway, res.Code)
 	assert.Equal(t, "external service error", resBody["message"])
 }
+
+func TestGetMetrics_MissingAuthor(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockProvider := mockImpls.NewMockBooksProvider()
+	service := services.NewMetricsService(mockProvider)
+	handler := NewMetricsHandler(service)
+
+	r := gin.Default()
+	r.GET("/", handler.GetMetrics())
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	res := httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+
+	var resBody map[string]interface{}
+	json.Unmarshal(res.Body.Bytes(), &resBody)
+
+	assert.Equal(t, http.StatusBadRequest, res.Code)
+	assert.Equal(t, "missing required query parameter: author", resBody["message"])
+}
